@@ -14,10 +14,10 @@ public class CheckWebsiteUptime
     }
 
     [Function("CheckWebsiteUptime")]
-    public async Task RunAsync([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer)
+    public async Task RunAsync([TimerTrigger("0 0 */12 * * *")] TimerInfo myTimer)
     {
-        var urlToCheck = "https://www.ottorinobruni.com";
-        var logicAppUrl = "https://prod-119.westeurope.logic.azure.com:443/workflows/c449d5e3238a4ecfbcb24a77ac65cb92/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=076zeZ0-MP-aGBvC95IVZ3JXXi7DNN-nNaaXj9mnT7k";
+        var urlToCheck = "YOUR-SITE";
+        var logicAppUrl = "YOUR-LOGIC-APP-URL";
         var httpClient = new HttpClient();
 
         try
