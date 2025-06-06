@@ -14,10 +14,10 @@ public class CheckWebsiteUptime
     }
 
     [Function("CheckWebsiteUptime")]
-    public async Task RunAsync([TimerTrigger("0 0 */12 * * *")] TimerInfo myTimer)
+    public async Task RunAsync([TimerTrigger("%TimerSchedule%")] TimerInfo myTimer)
     {
-        var urlToCheck = "YOUR-SITE";
-        var logicAppUrl = "YOUR-LOGIC-APP-URL";
+        var urlToCheck = Environment.GetEnvironmentVariable("UrlToCheck");
+        var logicAppUrl = Environment.GetEnvironmentVariable("LogicAppUrl");
         var httpClient = new HttpClient();
 
         try
