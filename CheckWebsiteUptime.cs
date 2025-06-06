@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
@@ -7,6 +8,7 @@ namespace FunctionUptime;
 public class CheckWebsiteUptime
 {
     private readonly ILogger _logger;
+    private static readonly HttpClient _httpClient = new HttpClient();
 
     public CheckWebsiteUptime(ILoggerFactory loggerFactory)
     {
@@ -18,16 +20,26 @@ public class CheckWebsiteUptime
     {
         var urlToCheck = Environment.GetEnvironmentVariable("UrlToCheck");
         var logicAppUrl = Environment.GetEnvironmentVariable("LogicAppUrl");
-        var httpClient = new HttpClient();
-
+        
         try
         {
-            var response = await httpClient.GetAsync(urlToCheck);
+            var response = await _httpClient.GetAsync(urlToCheck);
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning($"Website is not reachable. Status code: {response.StatusCode}");
 
-                await httpClient.PostAsync(logicAppUrl, null);
+                var payload = new
+                {
+                    url = urlToCheck,
+                    status = "fail",
+                    statusCode = (int)response.StatusCode,
+                    timestamp = DateTime.UtcNow.ToString("o")
+                };
+
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                await _httpClient.PostAsync(logicAppUrl, content);
             }
             else
             {
@@ -37,8 +49,17 @@ public class CheckWebsiteUptime
         catch (Exception ex)
         {
             _logger.LogError($"Error checking website: {ex.Message}");
-
-            await httpClient.PostAsync(logicAppUrl, null);
+            
+            var errorPayload = new
+            {
+                url = urlToCheck,
+                status = "error",
+                statusCode = 0,
+                timestamp = DateTime.UtcNow.ToString("o")
+            };
+            var errorJson = JsonSerializer.Serialize(errorPayload);
+            var errorContent = new StringContent(errorJson, Encoding.UTF8, "application/json");
+            await _httpClient.PostAsync(logicAppUrl, errorContent);
         }
     }
 }
